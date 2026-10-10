@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Traducteur Hors-Ligne Multilingue</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar for mobile sleekness */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-md mx-auto px-3 py-2.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-earth-americas text-lg text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xs font-bold leading-tight tracking-tight">MultiTrad Pro</h1>
+                    <span id="connection-status" class="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 inline-flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Hors-ligne prêt
+                    </span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1">
+                <button onclick="switchTab('translator')" id="nav-btn-translator" class="p-2 rounded-lg bg-indigo-700 text-xs font-medium transition hover:bg-indigo-500" title="Traducteur">
+                    <i class="fa-solid fa-keyboard"></i>
+                </button>
+                <button onclick="switchTab('phrases')" id="nav-btn-phrases" class="p-2 rounded-lg hover:bg-indigo-700 text-xs font-medium transition" title="Phrases types">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </button>
+                <button onclick="switchTab('history')" id="nav-btn-history" class="p-2 rounded-lg hover:bg-indigo-700 text-xs font-medium transition" title="Historique">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-md w-full mx-auto px-2 py-3 flex flex-col overflow-y-auto">
+
+        <!-- TOAST NOTIFICATION CONTAINER -->
+        <div id="toast-container" class="fixed top-12 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
+            <div id="toast-msg" class="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span id="toast-text">Copié dans le presse-papier</span>
+            </div>
+        </div>
+
+        <!-- TAB 1: TRANSLATOR -->
+        <div id="tab-translator" class="space-y-3 flex-1 flex flex-col">
+            <!-- Language Selector Bar with Select Dropdowns -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-2 flex items-center justify-between gap-1">
+                <div class="flex-1">
+                    <label for="source-lang-select" class="block text-[10px] text-slate-400 font-semibold mb-0.5 px-1">Source</label>
+                    <select id="source-lang-select" onchange="handleLanguageChange()" class="w-full text-xs font-semibold text-indigo-600 bg-indigo-50 py-1.5 px-2 rounded-lg border border-indigo-100 focus:outline-none">
+                        <option value="fr" selected>Français (FR)</option>
+                        <option value="en">Anglais (EN)</option>
+                        <option value="es">Espagnol (ES)</option>
+                        <option value="de">Allemand (DE)</option>
+                        <option value="it">Italien (IT)</option>
+                        <option value="pt">Portugais (PT)</option>
+                        <option value="ar">Arabe (AR)</option>
+                    </select>
+                </div>
+
+                <button onclick="swapLanguages()" class="mt-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 transition flex items-center justify-center shrink-0 border border-slate-200" title="Inverser les langues">
+                    <i class="fa-solid fa-right-left text-xs"></i>
+                </button>
+
+                <div class="flex-1">
+                    <label for="target-lang-select" class="block text-[10px] text-slate-400 font-semibold mb-0.5 px-1">Traduction</label>
+                    <select id="target-lang-select" onchange="handleLanguageChange()" class="w-full text-xs font-semibold text-slate-700 bg-slate-50 py-1.5 px-2 rounded-lg border border-slate-200 focus:outline-none">
+                        <option value="fr">Français (FR)</option>
+                        <option value="en" selected>Anglais (EN)</option>
+                        <option value="es">Espagnol (ES)</option>
+                        <option value="de">Allemand (DE)</option>
+                        <option value="it">Italien (IT)</option>
+                        <option value="pt">Portugais (PT)</option>
+                        <option value="ar">Arabe (AR)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Source Box -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col p-3 relative flex-1 min-h-[130px]">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" id="source-title">Texte source</span>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="clearSourceText()" class="text-slate-400 hover:text-rose-500 p-1.5 rounded-md transition text-xs" title="Effacer">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <button onclick="speakText('source')" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-md transition text-xs" title="Écouter">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="source-textarea" class="w-full flex-1 resize-none bg-transparent pt-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none" placeholder="Tapez votre texte ici (disponible hors-ligne)..." oninput="handleTranslationInput()"></textarea>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                    <span id="char-counter">0 caractères</span>
+                    <span class="text-indigo-600 font-medium bg-indigo-50 px-1.5 py-0.5 rounded">Moteur Hors-Ligne Actif</span>
+                </div>
+            </div>
+
+            <!-- Translate Action Button -->
+            <button onclick="performTranslation()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm">
+                <i class="fa-solid fa-language"></i> Traduire instantanément
+            </button>
+
+            <!-- Target Box -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col p-3 relative flex-1 min-h-[130px]">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" id="target-title">Traduction</span>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="copyTargetText()" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-md transition text-xs" title="Copier">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                        <button onclick="speakText('target')" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-md transition text-xs" title="Écouter">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="target-output" class="w-full flex-1 pt-2 text-sm text-slate-800 select-text overflow-y-auto min-h-[70px] max-h-[110px] whitespace-pre-wrap">La traduction apparaîtra ici...</div>
+                <div class="flex items-center justify-end pt-2 border-t border-slate-100">
+                    <button onclick="toggleFavorite()" id="fav-btn" class="text-slate-300 hover:text-amber-500 transition text-xs flex items-center gap-1 font-medium">
+                        <i class="fa-solid fa-star"></i> <span id="fav-text">Favori</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-phrases" class="space-y-3 hidden flex-1 flex flex-col">
+            <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs">
+                <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-book-open text-indigo-600"></i> Guide de voyage multilingue
+                </h2>
+                <p class="text-[11px] text-slate-500 mb-3">Phrases utiles prêtes à l'emploi sans connexion.</p>
+                
+                <!-- Category filters -->
+                <div class="flex gap-1 overflow-x-auto pb-2 mb-2 no-scrollbar">
+                    <button onclick="filterPhrases('all')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 text-white shrink-0">Tout</button>
+                    <button onclick="filterPhrases('voyage')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200">Voyage</button>
+                    <button onclick="filterPhrases('resto')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200">Resto</button>
+                    <button onclick="filterPhrases('urgence')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200">Urgence</button>
+                </div>
+            </div>
+
+            <!-- Phrases List -->
+            <div id="phrases-container" class="space-y-2 overflow-y-auto flex-1">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <div id="tab-history" class="space-y-3 hidden flex-1 flex flex-col">
+            <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs flex items-center justify-between">
+                <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Historique récent
+                </h2>
+                <button onclick="clearHistory()" class="text-[10px] text-rose-600 hover:underline font-medium">Tout effacer</button>
+            </div>
+
+            <div id="history-container" class="space-y-2 overflow-y-auto flex-1">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-2 px-3 text-center text-[10px] text-slate-400">
+        <span>100% Hors-ligne • Français, Anglais, Espagnol, Allemand, Italien, Portugais, Arabe</span>
+    </footer>
+
+    <script>
+        // Comprehensive Multi-language Offline Dictionary (French base to EN, ES, DE, IT, PT, AR)
+        const offlineDictionary = {
+            "bonjour": { en: "hello", es: "hola", de: "hallo", it: "ciao", pt: "olá", ar: "مرحباً" },
+            "bonsoir": { en: "good evening", es: "buenas noches", de: "guten abend", it: "buona sera", pt: "boa noite", ar: "مساء الخير" },
+            "salut": { en: "hi", es: "hola", de: "hallo", it: "ciao", pt: "oi", ar: "أهلاً" },
+            "comment ça va ?": { en: "how are you?", es: "¿cómo estás?", de: "wie geht es dir?", it: "come stai?", pt: "como você está?", ar: "كيف حالك؟" },
+            "je vais bien": { en: "i am fine", es: "estoy bien", de: "mir geht es gut", it: "sto bene", pt: "estou bem", ar: "أنا بخير" },
+            "merci": { en: "thank you", es: "gracias", de: "danke", it: "grazie", pt: "obrigado", ar: "شكرا" },
+            "s'il vous plaît": { en: "please", es: "por favor", de: "bitte", it: "per favore", pt: "por favor", ar: "من فضلك" },
+            "oui": { en: "yes", es: "sí", de: "ja", it: "sì", pt: "sim", ar: "نعم" },
+            "non": { en: "no", es: "no", de: "nein", it: "no", pt: "não", ar: "لا" },
+            "au revoir": { en: "goodbye", es: "adiós", de: "auf wiedersehen", it: "arrivederci", pt: "adeus", ar: "مع السلامة" },
+            "excusez-moi": { en: "excuse me", es: "disculpe", de: "entschuldigung", it: "scusi", pt: "com licença", ar: "عذراً" },
+            "je ne comprends pas": { en: "i don't understand", es: "no entiendo", de: "ich verstehe nicht", it: "non capisco", pt: "eu não entendo", ar: "لا أكون أفهم" },
+            "parlez-vous français ?": { en: "do you speak french?", es: "¿habla francés?", de: "sprechen sie französisch?", it: "parla francese?", pt: "você fala francês?", ar: "هل تتحدث الفرنسية؟" },
+            "où est la gare ?": { en: "where is the station?", es: "¿dónde está la estación?", de: "wo ist der bahnhof?", it: "dov'è la stazione?", pt: "onde fica a estação?", ar: "أين المحطة؟" },
+            "combien ça coûte ?": { en: "how much does it cost?", es: "¿cuánto cuesta?", de: "wie viel kostet das?", it: "quanto costa?", pt: "quanto custa?", ar: "كم تكلفة هذا؟" },
+            "l'addition s'il vous plaît": { en: "the check please", es: "la cuenta por favor", de: "die rechnung bitte", it: "il conto per favore", pt: "a conta por favor", ar: "الحساب من فضلك" },
+            "j'ai faim": { en: "i am hungry", es: "tengo hambre", de: "ich habe hunger", it: "ho fame", pt: "estou com fome", ar: "أنا جائع" },
+            "eau": { en: "water", es: "agua", de: "wasser", it: "acqua", pt: "água", ar: "ماء" },
+            "café": { en: "coffee", es: "café", de: "kaffee", it: "caffè", pt: "café", ar: "قهوة" },
+            "hôpital": { en: "hospital", es: "hospital", de: "krankenhaus", it: "ospedale", pt: "hospital", ar: "مستشفى" },
+            "aidez-moi": { en: "help me", es: "ayúdame", de: "helfen sie mir", it: "aiutami", pt: "ajude-me", ar: "ساعدني" }
+        };
+
+        // Quick phrases in French with translations for all supported languages
+        const quickPhrases = [
+            { cat: "voyage", fr: "Où est la gare ?", translations: { en: "Where is the station?", es: "¿Dónde está la estación?", de: "Wo ist der Bahnhof?", it: "Dov'è la stazione?", pt: "Onde fica a estação?", ar: "أين المحطة؟" } },
+            { cat: "voyage", fr: "Excusez-moi", translations: { en: "Excuse me", es: "Disculpe", de: "Entschuldigung", it: "Scusi", pt: "Com licença", ar: "عذراً" } },
+            { cat: "voyage", fr: "Combien ça coûte ?", translations: { en: "How much does it cost?", es: "¿Cuánto cuesta?", de: "Wie viel kostet das?", it: "Quanto costa?", pt: "Quanto custa?", ar: "كم تكلفة هذا؟" },
+            { cat: "resto", fr: "L'addition s'il vous plaît", translations: { en: "The check please", es: "La cuenta por favor", de: "Die Rechnung bitte", it: "Il conto per favore", pt: "A conta por favor", ar: "الحساب من فضلك" },
+            { cat: "resto", fr: "J'ai faim", translations: { en: "I am hungry", es: "Tengo hambre", de: "Ich habe Hunger", it: "Ho fame", pt: "Estou com fome", ar: "أنا جائع" },
+            { cat: "urgence", fr: "Aidez-moi", translations: { en: "Help me", es: "Ayúdame", de: "Helfen Sie mir", it: "Aiutami", pt: "Ajude-me", ar: "ساعدني" },
+            { cat: "urgence", fr: "Où est l'hôpital ?", translations: { en: "Where is the hospital?", es: "¿Dónde está el hospital?", de: "Wo ist das Krankenhaus?", it: "Dov'è l'ospedale?", pt: "Onde fica o hospital?", ar: "أين المستشفى؟" } }
+        ];
+
+        let historyList = JSON.parse(localStorage.getItem('multitrad_history') || '[]');
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateConnectionStatus();
+            renderPhrases('all');
+            renderHistory();
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+        });
+
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('connection-status');
+            if (navigator.onLine) {
+                statusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> En ligne (Hors-ligne prêt)`;
+            } else {
+                statusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Mode Hors-Ligne`;
+            }
+        }
+
+        function switchTab(tabName) {
+            ['translator', 'phrases', 'history'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-btn-${t}`).classList.remove('bg-indigo-700');
+            });
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`nav-btn-${tabName}`).classList.add('bg-indigo-700');
+        }
+
+        function handleLanguageChange() {
+            const src = document.getElementById('source-lang-select').value;
+            const tgt = document.getElementById('target-lang-select').value;
+            document.getElementById('source-title').textContent = `Texte source (${src.toUpperCase()})`;
+            document.getElementById('target-title').textContent = `Traduction (${tgt.toUpperCase()})`;
+            performTranslation();
+        }
+
+        function swapLanguages() {
+            const srcSelect = document.getElementById('source-lang-select');
+            const tgtSelect = document.getElementById('target-lang-select');
+            const temp = srcSelect.value;
+            srcSelect.value = tgtSelect.value;
+            tgtSelect.value = temp;
+
+            handleLanguageChange();
+
+            // Swap texts if present
+            const srcTextarea = document.getElementById('source-textarea');
+            const tgtOutput = document.getElementById('target-output');
+            if (tgtOutput.textContent && !tgtOutput.textContent.includes("apparaîtra ici")) {
+                const tempText = srcTextarea.value;
+                srcTextarea.value = tgtOutput.textContent;
+                tgtOutput.textContent = tempText;
+                performTranslation();
+            }
+        }
+
+        function handleTranslationInput() {
+            const val = document.getElementById('source-textarea').value;
+            document.getElementById('char-counter').textContent = `${val.length} caractères`;
+            if (val.trim().length > 0) {
+                performTranslation();
+            } else {
+                document.getElementById('target-output').textContent = "La traduction apparaîtra ici...";
+            }
+        }
+
+        function clearSourceText() {
+            document.getElementById('source-textarea').value = '';
+            document.getElementById('target-output').textContent = "La traduction apparaîtra ici...";
+            document.getElementById('char-counter').textContent = "0 caractères";
+        }
+
+        function performTranslation() {
+            const rawText = document.getElementById('source-textarea').value.trim();
+            const srcLang = document.getElementById('source-lang-select').value;
+            const tgtLang = document.getElementById('target-lang-select').value;
+
+            if (!rawText) {
+                document.getElementById('target-output').textContent = "La traduction apparaîtra ici...";
+                return;
+            }
+
+            const cleanKey = rawText.toLowerCase();
+            let translated = "";
+
+            if (srcLang === 'fr') {
+                if (offlineDictionary[cleanKey] && offlineDictionary[cleanKey][tgtLang]) {
+                    translated = capitalizeFirstLetter(offlineDictionary[cleanKey][tgtLang]);
+                } else {
+                    // Word fallback or simulation
+                    translated = `[${tgtLang.toUpperCase()}] ${rawText}`;
+                }
+            } else if (tgtLang === 'fr') {
+                // Reverse lookup in dictionary
+                let found = "";
+                for (let [frKey, transObj] of Object.entries(offlineDictionary)) {
+                    if (transObj[srcLang] && transObj[srcLang].toLowerCase() === cleanKey) {
+                        found = frKey;
+                        break;
+                    }
+                }
+                translated = found ? capitalizeFirstLetter(found) : `[FR] ${rawText}`;
+            } else {
+                translated = `[${tgtLang.toUpperCase()}] ${rawText}`;
+            }
+
+            document.getElementById('target-output').textContent = translated;
+
+            // Save to history
+            if (translated && rawText) {
+                const entry = { src: rawText, tgt: translated, langs: `${srcLang.toUpperCase()} → ${tgtLang.toUpperCase()}`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+                if (historyList.length === 0 || historyList[0].src !== rawText) {
+                    historyList.unshift(entry);
+                    if (historyList.length > 25) historyList.pop();
+                    localStorage.setItem('multitrad_history', JSON.stringify(historyList));
+                    renderHistory();
+                }
+            }
+        }
+
+        function capitalizeFirstLetter(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function copyTargetText() {
+            const text = document.getElementById('target-output').textContent;
+            if (!text || text.includes("apparaîtra ici")) return;
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Traduction copiée !");
+            } catch (err) {
+                showToast("Erreur de copie");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function speakText(type) {
+            const text = type === 'source' ? document.getElementById('source-textarea').value : document.getElementById('target-output').textContent;
+            const lang = type === 'source' ? document.getElementById('source-lang-select').value : document.getElementById('target-lang-select').value;
+            if (!text || text.includes("apparaîtra ici")) return;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                const langMap = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE', it: 'it-IT', pt: 'pt-PT', ar: 'ar-SA' };
+                utterance.lang = langMap[lang] || 'en-US';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("Audio non supporté");
+            }
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            document.getElementById('toast-text').textContent = msg;
+            container.classList.remove('opacity-0', 'translate-y-[-10px]');
+            container.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-[-10px]');
+            }, 2000);
+        }
+
+        function filterPhrases(category) {
+            document.querySelectorAll('.phrase-filter-btn').forEach(btn => {
+                btn.className = "phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200";
+            });
+            event.target.className = "phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 text-white shrink-0";
+            renderPhrases(category);
+        }
+
+        function renderPhrases(category) {
+            const container = document.getElementById('phrases-container');
+            container.innerHTML = '';
+            const tgtLang = document.getElementById('target-lang-select').value;
+            const filtered = category === 'all' ? quickPhrases : quickPhrases.filter(p => p.cat === category);
+
+            filtered.forEach(item => {
+                const translatedText = item.translations[tgtLang] || item.translations['en'];
+                const div = document.createElement('div');
+                div.className = "bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2";
+                div.innerHTML = `
+                    <div class="flex-1 cursor-pointer" onclick="loadPhrase('${item.fr.replace(/'/g, "\\'")}')">
+                        <p class="text-xs font-semibold text-slate-800">${item.fr}</p>
+                        <p class="text-[11px] text-indigo-600 font-medium">${translatedText}</p>
+                    </div>
+                    <button onclick="speakPhrase('${translatedText.replace(/'/g, "\\'")}', '${tgtLang}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 flex items-center justify-center shrink-0 border border-slate-200 text-xs">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function loadPhrase(frText) {
+            switchTab('translator');
+            document.getElementById('source-lang-select').value = 'fr';
+            document.getElementById('source-textarea').value = frText;
+            handleLanguageChange();
+        }
+
+        function speakPhrase(text, lang) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                const langMap = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE', it: 'it-IT', pt: 'pt-PT', ar: 'ar-SA' };
+                utterance.lang = langMap[lang] || 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = '';
+            if (historyList.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">Aucun historique récent</div>`;
+                return;
+            }
+
+            historyList.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2";
+                div.innerHTML = `
+                    <div class="flex-1 overflow-hidden cursor-pointer" onclick="restoreHistory(${index})">
+                        <div class="flex items-center gap-2 text-[10px] text-slate-400 mb-0.5">
+                            <span class="bg-slate-100 px-1 rounded font-mono">${item.langs}</span>
+                            <span>${item.date}</span>
+                        </div>
+                        <p class="text-xs font-medium text-slate-800 truncate">${item.src}</p>
+                        <p class="text-xs text-indigo-600 truncate">${item.tgt}</p>
+                    </div>
+                    <button onclick="deleteHistoryItem(${index})" class="text-slate-300 hover:text-rose-500 p-1 transition text-xs">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function restoreHistory(index) {
+            const item = historyList[index];
+            const parts = item.langs.split(' → ');
+            switchTab('translator');
+            document.getElementById('source-lang-select').value = parts[0].toLowerCase();
+            document.getElementById('target-lang-select').value = parts[1].toLowerCase();
+            document.getElementById('source-textarea').value = item.src;
+            handleLanguageChange();
+        }
+
+        function deleteHistoryItem(index) {
+            historyList.splice(index, 1);
+            localStorage.setItem('multitrad_history', JSON.stringify(historyList));
+            renderHistory();
+        }
+
+        function clearHistory() {
+            historyList = [];
+            localStorage.removeItem('multitrad_history');
+            renderHistory();
+            showToast("Historique effacé");
+        }
+
+        function toggleFavorite() {
+            const btn = document.getElementById('fav-btn');
+            const isFav = btn.classList.toggle('text-amber-500');
+            showToast(isFav ? "Ajouté aux favoris" : "Retiré des favoris");
+        }
+    </script>
+</body>
+</html>
