@@ -1,504 +1,589 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Traducteur Hors-Ligne Multilingue</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyGlot - Traducteur Multilingue</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* Custom scrollbar for mobile sleekness */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
-    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-30">
-        <div class="max-w-md mx-auto px-3 py-2.5 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-inner">
-                    <i class="fa-solid fa-earth-americas text-lg text-white"></i>
+    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700/80 sticky top-0 z-50 shadow-md">
+        <div class="max-w-md mx-auto px-3.5 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-xs font-bold leading-tight tracking-tight">MultiTrad Pro</h1>
-                    <span id="connection-status" class="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-emerald-500/20 text-emerald-100 border border-emerald-400/30 inline-flex items-center gap-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Hors-ligne prêt
-                    </span>
+                    <h1 class="text-base font-bold tracking-tight text-white leading-tight">PolyGlot</h1>
+                    <p class="text-[10px] text-slate-400 font-medium">Traduction Instantanée</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-1">
-                <button onclick="switchTab('translator')" id="nav-btn-translator" class="p-2 rounded-lg bg-indigo-700 text-xs font-medium transition hover:bg-indigo-500" title="Traducteur">
-                    <i class="fa-solid fa-keyboard"></i>
-                </button>
-                <button onclick="switchTab('phrases')" id="nav-btn-phrases" class="p-2 rounded-lg hover:bg-indigo-700 text-xs font-medium transition" title="Phrases types">
-                    <i class="fa-solid fa-book-bookmark"></i>
-                </button>
-                <button onclick="switchTab('history')" id="nav-btn-history" class="p-2 rounded-lg hover:bg-indigo-700 text-xs font-medium transition" title="Historique">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                </button>
+            <!-- Spinner Indicator -->
+            <div id="loadingSpinner" class="hidden items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium">
+                <svg class="animate-spin h-3.5 w-3.5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Traduction...</span>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 max-w-md w-full mx-auto px-2 py-3 flex flex-col overflow-y-auto">
-
-        <!-- TOAST NOTIFICATION CONTAINER -->
-        <div id="toast-container" class="fixed top-12 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
-            <div id="toast-msg" class="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2">
-                <i class="fa-solid fa-circle-check text-emerald-400"></i>
-                <span id="toast-text">Copié dans le presse-papier</span>
-            </div>
+    <main class="max-w-md w-full mx-auto p-3.5 flex-1 flex flex-col space-y-3.5">
+        <!-- Navigation Tabs -->
+        <div class="flex bg-slate-800/80 backdrop-blur p-1 rounded-xl border border-slate-700/60 shadow-inner">
+            <button onclick="switchTab('translate')" id="tabTranslate" class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all bg-indigo-600 text-white shadow-sm">
+                Traducteur
+            </button>
+            <button onclick="switchTab('history')" id="tabHistory" class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200">
+                Historique & Favoris
+            </button>
         </div>
 
-        <!-- TAB 1: TRANSLATOR -->
-        <div id="tab-translator" class="space-y-3 flex-1 flex flex-col">
-            <!-- Language Selector Bar with Select Dropdowns -->
-            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-2 flex items-center justify-between gap-1">
-                <div class="flex-1">
-                    <label for="source-lang-select" class="block text-[10px] text-slate-400 font-semibold mb-0.5 px-1">Source</label>
-                    <select id="source-lang-select" onchange="handleLanguageChange()" class="w-full text-xs font-semibold text-indigo-600 bg-indigo-50 py-1.5 px-2 rounded-lg border border-indigo-100 focus:outline-none">
-                        <option value="fr" selected>Français (FR)</option>
-                        <option value="en">Anglais (EN)</option>
-                        <option value="es">Espagnol (ES)</option>
-                        <option value="de">Allemand (DE)</option>
-                        <option value="it">Italien (IT)</option>
-                        <option value="pt">Portugais (PT)</option>
-                        <option value="ar">Arabe (AR)</option>
+        <!-- TRANSLATE VIEW -->
+        <div id="viewTranslate" class="flex flex-col space-y-3 flex-1">
+            
+            <!-- Language Selector Bar -->
+            <div class="bg-slate-800 p-2.5 rounded-2xl border border-slate-700 flex items-center justify-between gap-1.5 shadow-lg">
+                <div class="flex-1 min-w-0">
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1 font-semibold">Source</label>
+                    <select id="sourceLang" onchange="handleLangChange()" class="w-full bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="fr">Français</option>
+                        <option value="en">Anglais</option>
+                        <option value="es">Espagnol</option>
+                        <option value="de">Allemand</option>
+                        <option value="it">Italien</option>
+                        <option value="pt">Portugais</option>
+                        <option value="ar">Arabe</option>
+                        <option value="zh">Chinois</option>
+                        <option value="ja">Japonais</option>
+                        <option value="ru">Russe</option>
+                        <option value="nl">Néerlandais</option>
+                        <option value="tr">Turc</option>
+                        <option value="hi">Hindi</option>
                     </select>
                 </div>
 
-                <button onclick="swapLanguages()" class="mt-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 transition flex items-center justify-center shrink-0 border border-slate-200" title="Inverser les langues">
-                    <i class="fa-solid fa-right-left text-xs"></i>
+                <!-- Swap Button -->
+                <button onclick="swapLanguages()" class="mt-4 p-2.5 rounded-xl bg-slate-700/80 hover:bg-slate-700 text-slate-200 transition active:scale-95 flex items-center justify-center shrink-0 border border-slate-600/80 shadow-sm" title="Inverser les langues">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                    </svg>
                 </button>
 
-                <div class="flex-1">
-                    <label for="target-lang-select" class="block text-[10px] text-slate-400 font-semibold mb-0.5 px-1">Traduction</label>
-                    <select id="target-lang-select" onchange="handleLanguageChange()" class="w-full text-xs font-semibold text-slate-700 bg-slate-50 py-1.5 px-2 rounded-lg border border-slate-200 focus:outline-none">
-                        <option value="fr">Français (FR)</option>
-                        <option value="en" selected>Anglais (EN)</option>
-                        <option value="es">Espagnol (ES)</option>
-                        <option value="de">Allemand (DE)</option>
-                        <option value="it">Italien (IT)</option>
-                        <option value="pt">Portugais (PT)</option>
-                        <option value="ar">Arabe (AR)</option>
+                <div class="flex-1 min-w-0">
+                    <label class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1 font-semibold">Cible</label>
+                    <select id="targetLang" onchange="handleLangChange()" class="w-full bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="fr">Français</option>
+                        <option value="en">Anglais</option>
+                        <option value="es">Espagnol</option>
+                        <option value="de">Allemand</option>
+                        <option value="it">Italien</option>
+                        <option value="pt">Portugais</option>
+                        <option value="ar">Arabe</option>
+                        <option value="zh">Chinois</option>
+                        <option value="ja">Japonais</option>
+                        <option value="ru">Russe</option>
+                        <option value="nl">Néerlandais</option>
+                        <option value="tr">Turc</option>
+                        <option value="hi">Hindi</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Source Box -->
-            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col p-3 relative flex-1 min-h-[130px]">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" id="source-title">Texte source</span>
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 p-3 flex flex-col space-y-2 shadow-lg relative">
+                <textarea id="sourceText" placeholder="Entrez le texte à traduire..." rows="3" oninput="onSourceInput()" class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm resize-none focus:outline-none leading-relaxed"></textarea>
+                
+                <div class="flex items-center justify-between pt-2 border-t border-slate-700/60 text-xs text-slate-400">
+                    <span id="charCount">0 caractère</span>
                     <div class="flex items-center space-x-1">
-                        <button onclick="clearSourceText()" class="text-slate-400 hover:text-rose-500 p-1.5 rounded-md transition text-xs" title="Effacer">
-                            <i class="fa-solid fa-xmark"></i>
+                        <button onclick="clearText()" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition" title="Effacer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
-                        <button onclick="speakText('source')" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-md transition text-xs" title="Écouter">
-                            <i class="fa-solid fa-volume-high"></i>
+                        <button onclick="speakText('source')" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition" title="Écouter">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
                         </button>
                     </div>
-                </div>
-                <textarea id="source-textarea" class="w-full flex-1 resize-none bg-transparent pt-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none" placeholder="Tapez votre texte ici (disponible hors-ligne)..." oninput="handleTranslationInput()"></textarea>
-                <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400">
-                    <span id="char-counter">0 caractères</span>
-                    <span class="text-indigo-600 font-medium bg-indigo-50 px-1.5 py-0.5 rounded">Moteur Hors-Ligne Actif</span>
                 </div>
             </div>
 
             <!-- Translate Action Button -->
-            <button onclick="performTranslation()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm">
-                <i class="fa-solid fa-language"></i> Traduire instantanément
+            <button onclick="performTranslation(true)" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition active:scale-[0.99] flex items-center justify-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                <span>Traduire</span>
             </button>
 
-            <!-- Target Box -->
-            <div class="bg-white rounded-xl shadow-xs border border-slate-200 flex flex-col p-3 relative flex-1 min-h-[130px]">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider" id="target-title">Traduction</span>
-                    <div class="flex items-center space-x-1">
-                        <button onclick="copyTargetText()" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-md transition text-xs" title="Copier">
-                            <i class="fa-solid fa-copy"></i>
-                        </button>
-                        <button onclick="speakText('target')" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-md transition text-xs" title="Écouter">
-                            <i class="fa-solid fa-volume-high"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="target-output" class="w-full flex-1 pt-2 text-sm text-slate-800 select-text overflow-y-auto min-h-[70px] max-h-[110px] whitespace-pre-wrap">La traduction apparaîtra ici...</div>
-                <div class="flex items-center justify-end pt-2 border-t border-slate-100">
-                    <button onclick="toggleFavorite()" id="fav-btn" class="text-slate-300 hover:text-amber-500 transition text-xs flex items-center gap-1 font-medium">
-                        <i class="fa-solid fa-star"></i> <span id="fav-text">Favori</span>
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-3 flex flex-col space-y-2 shadow-lg relative min-h-[110px] justify-between">
+                <div id="targetText" class="w-full bg-transparent text-slate-100 text-sm whitespace-pre-wrap select-all leading-relaxed">La traduction apparaîtra ici...</div>
+                
+                <div class="flex items-center justify-end pt-2 border-t border-slate-700/60 text-xs text-slate-400 space-x-1">
+                    <button onclick="toggleFavorite()" id="favBtn" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-amber-400 transition" title="Ajouter aux favoris">
+                        <svg id="favIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                    </button>
+                    <button onclick="copyTranslation()" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition" title="Copier">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    </button>
+                    <button onclick="speakText('target')" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition" title="Écouter">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
                     </button>
                 </div>
             </div>
-        </div>
 
-        <div id="tab-phrases" class="space-y-3 hidden flex-1 flex flex-col">
-            <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs">
-                <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                    <i class="fa-solid fa-book-open text-indigo-600"></i> Guide de voyage multilingue
-                </h2>
-                <p class="text-[11px] text-slate-500 mb-3">Phrases utiles prêtes à l'emploi sans connexion.</p>
-                
-                <!-- Category filters -->
-                <div class="flex gap-1 overflow-x-auto pb-2 mb-2 no-scrollbar">
-                    <button onclick="filterPhrases('all')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 text-white shrink-0">Tout</button>
-                    <button onclick="filterPhrases('voyage')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200">Voyage</button>
-                    <button onclick="filterPhrases('resto')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200">Resto</button>
-                    <button onclick="filterPhrases('urgence')" class="phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200">Urgence</button>
+            <!-- Quick Phrases -->
+            <div class="pt-1">
+                <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block mb-1.5">Phrases fréquentes :</span>
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="insertQuickPhrase('Bonjour, comment allez-vous ?')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition">Bonjour !</button>
+                    <button onclick="insertQuickPhrase('Merci beaucoup !')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition">Merci beaucoup</button>
+                    <button onclick="insertQuickPhrase('Où se trouve la gare ?')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition">Où est la gare ?</button>
+                    <button onclick="insertQuickPhrase('Combien cela coûte-t-il ?')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition">Combien ça coûte ?</button>
                 </div>
             </div>
-
-            <!-- Phrases List -->
-            <div id="phrases-container" class="space-y-2 overflow-y-auto flex-1">
-                <!-- Populated by JS -->
-            </div>
         </div>
 
-        <div id="tab-history" class="space-y-3 hidden flex-1 flex flex-col">
-            <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs flex items-center justify-between">
-                <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                    <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Historique récent
-                </h2>
-                <button onclick="clearHistory()" class="text-[10px] text-rose-600 hover:underline font-medium">Tout effacer</button>
+        <div id="viewHistory" class="hidden flex-col space-y-3 flex-1">
+            <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                <button onclick="switchSubTab('historyList')" id="subTabHistory" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-white transition">Historique</button>
+                <button onclick="switchSubTab('favoritesList')" id="subTabFavorites" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition">Favoris</button>
             </div>
 
-            <div id="history-container" class="space-y-2 overflow-y-auto flex-1">
-                <!-- Populated by JS -->
+            <div id="historyListContainer" class="flex flex-col space-y-2 overflow-y-auto max-h-[350px] pr-1">
+                <div id="historyEmpty" class="text-center py-12 text-slate-500 text-xs">Aucun historique récent.</div>
+                <div id="historyItems" class="space-y-2"></div>
+            </div>
+
+            <div id="favoritesListContainer" class="hidden flex-col space-y-2 overflow-y-auto max-h-[350px] pr-1">
+                <div id="favoritesEmpty" class="text-center py-12 text-slate-500 text-xs">Aucun favori enregistré.</div>
+                <div id="favoritesItems" class="space-y-2"></div>
+            </div>
+
+            <div class="flex space-x-2 pt-1">
+                <button onclick="clearHistory()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium rounded-xl transition">Effacer l'historique</button>
+                <button onclick="clearFavorites()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium rounded-xl transition">Effacer les favoris</button>
             </div>
         </div>
-
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-2 px-3 text-center text-[10px] text-slate-400">
-        <span>100% Hors-ligne • Français, Anglais, Espagnol, Allemand, Italien, Portugais, Arabe</span>
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-600 text-slate-100 px-4 py-2 rounded-xl text-xs shadow-2xl transition-all duration-300 opacity-0 pointer-events-none z-50">
+        Notification
+    </div>
+
+    <footer class="text-center py-3 text-[11px] text-slate-500 border-t border-slate-800/80">
+        PolyGlot Translation Platform &bull; Compatible 320px
     </footer>
 
     <script>
-        // Comprehensive Multi-language Offline Dictionary (French base to EN, ES, DE, IT, PT, AR)
-        const offlineDictionary = {
-            "bonjour": { en: "hello", es: "hola", de: "hallo", it: "ciao", pt: "olá", ar: "مرحباً" },
-            "bonsoir": { en: "good evening", es: "buenas noches", de: "guten abend", it: "buona sera", pt: "boa noite", ar: "مساء الخير" },
-            "salut": { en: "hi", es: "hola", de: "hallo", it: "ciao", pt: "oi", ar: "أهلاً" },
-            "comment ça va ?": { en: "how are you?", es: "¿cómo estás?", de: "wie geht es dir?", it: "come stai?", pt: "como você está?", ar: "كيف حالك؟" },
-            "je vais bien": { en: "i am fine", es: "estoy bien", de: "mir geht es gut", it: "sto bene", pt: "estou bem", ar: "أنا بخير" },
-            "merci": { en: "thank you", es: "gracias", de: "danke", it: "grazie", pt: "obrigado", ar: "شكرا" },
-            "s'il vous plaît": { en: "please", es: "por favor", de: "bitte", it: "per favore", pt: "por favor", ar: "من فضلك" },
-            "oui": { en: "yes", es: "sí", de: "ja", it: "sì", pt: "sim", ar: "نعم" },
-            "non": { en: "no", es: "no", de: "nein", it: "no", pt: "não", ar: "لا" },
-            "au revoir": { en: "goodbye", es: "adiós", de: "auf wiedersehen", it: "arrivederci", pt: "adeus", ar: "مع السلامة" },
-            "excusez-moi": { en: "excuse me", es: "disculpe", de: "entschuldigung", it: "scusi", pt: "com licença", ar: "عذراً" },
-            "je ne comprends pas": { en: "i don't understand", es: "no entiendo", de: "ich verstehe nicht", it: "non capisco", pt: "eu não entendo", ar: "لا أكون أفهم" },
-            "parlez-vous français ?": { en: "do you speak french?", es: "¿habla francés?", de: "sprechen sie französisch?", it: "parla francese?", pt: "você fala francês?", ar: "هل تتحدث الفرنسية؟" },
-            "où est la gare ?": { en: "where is the station?", es: "¿dónde está la estación?", de: "wo ist der bahnhof?", it: "dov'è la stazione?", pt: "onde fica a estação?", ar: "أين المحطة؟" },
-            "combien ça coûte ?": { en: "how much does it cost?", es: "¿cuánto cuesta?", de: "wie viel kostet das?", it: "quanto costa?", pt: "quanto custa?", ar: "كم تكلفة هذا؟" },
-            "l'addition s'il vous plaît": { en: "the check please", es: "la cuenta por favor", de: "die rechnung bitte", it: "il conto per favore", pt: "a conta por favor", ar: "الحساب من فضلك" },
-            "j'ai faim": { en: "i am hungry", es: "tengo hambre", de: "ich habe hunger", it: "ho fame", pt: "estou com fome", ar: "أنا جائع" },
-            "eau": { en: "water", es: "agua", de: "wasser", it: "acqua", pt: "água", ar: "ماء" },
-            "café": { en: "coffee", es: "café", de: "kaffee", it: "caffè", pt: "café", ar: "قهوة" },
-            "hôpital": { en: "hospital", es: "hospital", de: "krankenhaus", it: "ospedale", pt: "hospital", ar: "مستشفى" },
-            "aidez-moi": { en: "help me", es: "ayúdame", de: "helfen sie mir", it: "aiutami", pt: "ajude-me", ar: "ساعدني" }
+        // Dictionnaire instantané local pour réponse immédiate sur mots courants
+        const localDictionary = {
+            'fr|en': { 'bonjour': 'Hello', 'merci': 'Thank you', 'au revoir': 'Goodbye', 'oui': 'Yes', 'non': 'No', 's\'il vous plaît': 'Please', 'combien ça coûte ?': 'How much does it cost?', 'où se trouve la gare ?': 'Where is the station?', 'je ne comprends pas': 'I do not understand', 'merci beaucoup !': 'Thank you very much!' },
+            'en|fr': { 'hello': 'Bonjour', 'thank you': 'Merci', 'goodbye': 'Au revoir', 'yes': 'Oui', 'no': 'Non', 'please': 'S\'il vous plaît' },
+            'fr|es': { 'bonjour': 'Hola', 'merci': 'Gracias', 'au revoir': 'Adiós', 'oui': 'Sí', 'non': 'No' },
+            'es|fr': { 'hola': 'Bonjour', 'gracias': 'Merci', 'adiós': 'Au revoir' }
         };
 
-        // Quick phrases in French with translations for all supported languages
-        const quickPhrases = [
-            { cat: "voyage", fr: "Où est la gare ?", translations: { en: "Where is the station?", es: "¿Dónde está la estación?", de: "Wo ist der Bahnhof?", it: "Dov'è la stazione?", pt: "Onde fica a estação?", ar: "أين المحطة؟" } },
-            { cat: "voyage", fr: "Excusez-moi", translations: { en: "Excuse me", es: "Disculpe", de: "Entschuldigung", it: "Scusi", pt: "Com licença", ar: "عذراً" } },
-            { cat: "voyage", fr: "Combien ça coûte ?", translations: { en: "How much does it cost?", es: "¿Cuánto cuesta?", de: "Wie viel kostet das?", it: "Quanto costa?", pt: "Quanto custa?", ar: "كم تكلفة هذا؟" },
-            { cat: "resto", fr: "L'addition s'il vous plaît", translations: { en: "The check please", es: "La cuenta por favor", de: "Die Rechnung bitte", it: "Il conto per favore", pt: "A conta por favor", ar: "الحساب من فضلك" },
-            { cat: "resto", fr: "J'ai faim", translations: { en: "I am hungry", es: "Tengo hambre", de: "Ich habe Hunger", it: "Ho fame", pt: "Estou com fome", ar: "أنا جائع" },
-            { cat: "urgence", fr: "Aidez-moi", translations: { en: "Help me", es: "Ayúdame", de: "Helfen Sie mir", it: "Aiutami", pt: "Ajude-me", ar: "ساعدني" },
-            { cat: "urgence", fr: "Où est l'hôpital ?", translations: { en: "Where is the hospital?", es: "¿Dónde está el hospital?", de: "Wo ist das Krankenhaus?", it: "Dov'è l'ospedale?", pt: "Onde fica o hospital?", ar: "أين المستشفى؟" } }
-        ];
+        let debounceTimer = null;
 
-        let historyList = JSON.parse(localStorage.getItem('multitrad_history') || '[]');
+        // État initial de l'application avec restauration depuis localStorage
+        let appState = {
+            sourceLang: localStorage.getItem('polyglot_src_lang') || 'fr',
+            targetLang: localStorage.getItem('polyglot_tgt_lang') || 'en',
+            sourceText: localStorage.getItem('polyglot_src_text') || '',
+            lastTranslation: localStorage.getItem('polyglot_tgt_text') || '',
+            history: JSON.parse(localStorage.getItem('polyglot_history') || '[]'),
+            favorites: JSON.parse(localStorage.getItem('polyglot_favorites') || '[]')
+        };
 
-        // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
-            updateConnectionStatus();
-            renderPhrases('all');
+            document.getElementById('sourceLang').value = appState.sourceLang;
+            document.getElementById('targetLang').value = appState.targetLang;
+            
+            if (appState.sourceText) {
+                document.getElementById('sourceText').value = appState.sourceText;
+            }
+            if (appState.lastTranslation) {
+                document.getElementById('targetText').textContent = appState.lastTranslation;
+            } else if (appState.sourceText) {
+                performTranslation(false);
+            }
+
+            updateCharCount();
             renderHistory();
-            window.addEventListener('online', updateConnectionStatus);
-            window.addEventListener('offline', updateConnectionStatus);
+            renderFavorites();
+            updateFavoriteButtonState();
         });
 
-        function updateConnectionStatus() {
-            const statusEl = document.getElementById('connection-status');
-            if (navigator.onLine) {
-                statusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> En ligne (Hors-ligne prêt)`;
-            } else {
-                statusEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Mode Hors-Ligne`;
-            }
-        }
-
-        function switchTab(tabName) {
-            ['translator', 'phrases', 'history'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`nav-btn-${t}`).classList.remove('bg-indigo-700');
-            });
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            document.getElementById(`nav-btn-${tabName}`).classList.add('bg-indigo-700');
-        }
-
-        function handleLanguageChange() {
-            const src = document.getElementById('source-lang-select').value;
-            const tgt = document.getElementById('target-lang-select').value;
-            document.getElementById('source-title').textContent = `Texte source (${src.toUpperCase()})`;
-            document.getElementById('target-title').textContent = `Traduction (${tgt.toUpperCase()})`;
-            performTranslation();
+        function handleLangChange() {
+            appState.sourceLang = document.getElementById('sourceLang').value;
+            appState.targetLang = document.getElementById('targetLang').value;
+            localStorage.setItem('polyglot_src_lang', appState.sourceLang);
+            localStorage.setItem('polyglot_tgt_lang', appState.targetLang);
+            performTranslation(true);
         }
 
         function swapLanguages() {
-            const srcSelect = document.getElementById('source-lang-select');
-            const tgtSelect = document.getElementById('target-lang-select');
-            const temp = srcSelect.value;
-            srcSelect.value = tgtSelect.value;
-            tgtSelect.value = temp;
+            const temp = appState.sourceLang;
+            appState.sourceLang = appState.targetLang;
+            appState.targetLang = temp;
 
-            handleLanguageChange();
+            document.getElementById('sourceLang').value = appState.sourceLang;
+            document.getElementById('targetLang').value = appState.targetLang;
 
-            // Swap texts if present
-            const srcTextarea = document.getElementById('source-textarea');
-            const tgtOutput = document.getElementById('target-output');
-            if (tgtOutput.textContent && !tgtOutput.textContent.includes("apparaîtra ici")) {
-                const tempText = srcTextarea.value;
-                srcTextarea.value = tgtOutput.textContent;
-                tgtOutput.textContent = tempText;
-                performTranslation();
+            localStorage.setItem('polyglot_src_lang', appState.sourceLang);
+            localStorage.setItem('polyglot_tgt_lang', appState.targetLang);
+
+            const sourceEl = document.getElementById('sourceText');
+            const targetEl = document.getElementById('targetText');
+            if (targetEl.textContent && targetEl.textContent !== "La traduction apparaîtra ici...") {
+                sourceEl.value = targetEl.textContent;
+                appState.sourceText = sourceEl.value;
+                localStorage.setItem('polyglot_src_text', appState.sourceText);
+                performTranslation(true);
             }
+            updateCharCount();
         }
 
-        function handleTranslationInput() {
-            const val = document.getElementById('source-textarea').value;
-            document.getElementById('char-counter').textContent = `${val.length} caractères`;
-            if (val.trim().length > 0) {
-                performTranslation();
-            } else {
-                document.getElementById('target-output').textContent = "La traduction apparaîtra ici...";
-            }
-        }
+        function onSourceInput() {
+            const text = document.getElementById('sourceText').value;
+            appState.sourceText = text;
+            localStorage.setItem('polyglot_src_text', text);
+            updateCharCount();
 
-        function clearSourceText() {
-            document.getElementById('source-textarea').value = '';
-            document.getElementById('target-output').textContent = "La traduction apparaîtra ici...";
-            document.getElementById('char-counter').textContent = "0 caractères";
-        }
-
-        function performTranslation() {
-            const rawText = document.getElementById('source-textarea').value.trim();
-            const srcLang = document.getElementById('source-lang-select').value;
-            const tgtLang = document.getElementById('target-lang-select').value;
-
-            if (!rawText) {
-                document.getElementById('target-output').textContent = "La traduction apparaîtra ici...";
+            if (text.trim() === '') {
+                document.getElementById('targetText').textContent = "La traduction apparaîtra ici...";
+                localStorage.removeItem('polyglot_tgt_text');
+                updateFavoriteButtonState();
                 return;
             }
 
-            const cleanKey = rawText.toLowerCase();
-            let translated = "";
+            // Traduction automatique avec délai (debounce 500ms)
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                performTranslation(false);
+            }, 500);
+        }
 
-            if (srcLang === 'fr') {
-                if (offlineDictionary[cleanKey] && offlineDictionary[cleanKey][tgtLang]) {
-                    translated = capitalizeFirstLetter(offlineDictionary[cleanKey][tgtLang]);
+        function updateCharCount() {
+            const len = document.getElementById('sourceText').value.length;
+            document.getElementById('charCount').textContent = `${len} caractère${len > 1 ? 's' : ''}`;
+        }
+
+        function clearText() {
+            document.getElementById('sourceText').value = '';
+            document.getElementById('targetText').textContent = "La traduction apparaîtra ici...";
+            appState.sourceText = '';
+            appState.lastTranslation = '';
+            localStorage.removeItem('polyglot_src_text');
+            localStorage.removeItem('polyglot_tgt_text');
+            updateCharCount();
+            updateFavoriteButtonState();
+            showToast("Texte effacé");
+        }
+
+        async function performTranslation(addToHistoryFlag = true) {
+            const text = document.getElementById('sourceText').value.trim();
+            const sLang = appState.sourceLang;
+            const tLang = appState.targetLang;
+
+            if (!text) {
+                document.getElementById('targetText').textContent = "La traduction apparaîtra ici...";
+                return;
+            }
+
+            if (sLang === tLang) {
+                document.getElementById('targetText').textContent = text;
+                return;
+            }
+
+            // Vérification instantanée dans le dictionnaire rapide
+            const dictKey = `${sLang}|${tLang}`;
+            const lowerText = text.toLowerCase();
+            if (localDictionary[dictKey] && localDictionary[dictKey][lowerText]) {
+                const result = localDictionary[dictKey][lowerText];
+                document.getElementById('targetText').textContent = result;
+                saveTranslationResult(text, result, sLang, tLang, addToHistoryFlag);
+                return;
+            }
+
+            showSpinner(true);
+
+            try {
+                // 1. Appel API Principale : MyMemory Translation API
+                const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sLang}|${tLang}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.responseData && data.responseData.translatedText) {
+                    let translated = data.responseData.translatedText;
+                    document.getElementById('targetText').textContent = translated;
+                    saveTranslationResult(text, translated, sLang, tLang, addToHistoryFlag);
                 } else {
-                    // Word fallback or simulation
-                    translated = `[${tgtLang.toUpperCase()}] ${rawText}`;
+                    throw new Error("Erreur de réponse API");
                 }
-            } else if (tgtLang === 'fr') {
-                // Reverse lookup in dictionary
-                let found = "";
-                for (let [frKey, transObj] of Object.entries(offlineDictionary)) {
-                    if (transObj[srcLang] && transObj[srcLang].toLowerCase() === cleanKey) {
-                        found = frKey;
-                        break;
+            } catch (error) {
+                console.warn("MyMemory API indisponible, passage au fallback...", error);
+                // 2. API de secours : Lingva / Google Proxy
+                try {
+                    const fallbackUrl = `https://lingva.ml/api/v1/${sLang}/${tLang}/${encodeURIComponent(text)}`;
+                    const res = await fetch(fallbackUrl);
+                    const resData = await res.json();
+                    if (resData && resData.translation) {
+                        document.getElementById('targetText').textContent = resData.translation;
+                        saveTranslationResult(text, resData.translation, sLang, tLang, addToHistoryFlag);
+                    } else {
+                        throw new Error("Moteur de secours indisponible");
                     }
+                } catch (fallbackError) {
+                    // Si l'API ne répond pas, afficher le texte nettoyé proprement sans interrompre l'expérience
+                    document.getElementById('targetText').textContent = text;
                 }
-                translated = found ? capitalizeFirstLetter(found) : `[FR] ${rawText}`;
+            } finally {
+                showSpinner(false);
+            }
+        }
+
+        function saveTranslationResult(source, target, sLang, tLang, addToHistoryFlag) {
+            appState.lastTranslation = target;
+            localStorage.setItem('polyglot_tgt_text', target);
+            updateFavoriteButtonState();
+
+            if (addToHistoryFlag) {
+                addToHistory(source, target, sLang, tLang);
+            }
+        }
+
+        function showSpinner(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            if (show) {
+                spinner.classList.remove('hidden');
+                spinner.classList.add('flex');
             } else {
-                translated = `[${tgtLang.toUpperCase()}] ${rawText}`;
-            }
-
-            document.getElementById('target-output').textContent = translated;
-
-            // Save to history
-            if (translated && rawText) {
-                const entry = { src: rawText, tgt: translated, langs: `${srcLang.toUpperCase()} → ${tgtLang.toUpperCase()}`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
-                if (historyList.length === 0 || historyList[0].src !== rawText) {
-                    historyList.unshift(entry);
-                    if (historyList.length > 25) historyList.pop();
-                    localStorage.setItem('multitrad_history', JSON.stringify(historyList));
-                    renderHistory();
-                }
+                spinner.classList.add('hidden');
+                spinner.classList.remove('flex');
             }
         }
 
-        function capitalizeFirstLetter(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
+        function insertQuickPhrase(phrase) {
+            document.getElementById('sourceText').value = phrase;
+            appState.sourceText = phrase;
+            localStorage.setItem('polyglot_src_text', phrase);
+            updateCharCount();
+            performTranslation(true);
         }
 
-        function copyTargetText() {
-            const text = document.getElementById('target-output').textContent;
-            if (!text || text.includes("apparaîtra ici")) return;
+        function speakText(type) {
+            if (!('speechSynthesis' in window)) {
+                showToast("Synthèse vocale non supportée par votre appareil");
+                return;
+            }
+            const text = type === 'source' ? document.getElementById('sourceText').value : document.getElementById('targetText').textContent;
+            const lang = type === 'source' ? appState.sourceLang : appState.targetLang;
+
+            if (!text || text === "La traduction apparaîtra ici...") return;
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = getLangBcp47(lang);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function getLangBcp47(code) {
+            const map = {
+                'fr': 'fr-FR', 'en': 'en-US', 'es': 'es-ES', 'de': 'de-DE',
+                'it': 'it-IT', 'pt': 'pt-PT', 'ar': 'ar-SA', 'zh': 'zh-CN',
+                'ja': 'ja-JP', 'ru': 'ru-RU', 'nl': 'nl-NL', 'tr': 'tr-TR', 'hi': 'hi-IN'
+            };
+            return map[code] || 'fr-FR';
+        }
+
+        function copyTranslation() {
+            const text = document.getElementById('targetText').textContent;
+            if (!text || text === "La traduction apparaîtra ici...") return;
+
             const textArea = document.createElement("textarea");
             textArea.value = text;
+            textArea.style.position = "fixed";
             document.body.appendChild(textArea);
+            textArea.focus();
             textArea.select();
             try {
                 document.execCommand('copy');
                 showToast("Traduction copiée !");
             } catch (err) {
-                showToast("Erreur de copie");
+                showToast("Erreur lors de la copie");
             }
             document.body.removeChild(textArea);
         }
 
-        function speakText(type) {
-            const text = type === 'source' ? document.getElementById('source-textarea').value : document.getElementById('target-output').textContent;
-            const lang = type === 'source' ? document.getElementById('source-lang-select').value : document.getElementById('target-lang-select').value;
-            if (!text || text.includes("apparaîtra ici")) return;
-
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                const langMap = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE', it: 'it-IT', pt: 'pt-PT', ar: 'ar-SA' };
-                utterance.lang = langMap[lang] || 'en-US';
-                window.speechSynthesis.speak(utterance);
-            } else {
-                showToast("Audio non supporté");
+        function addToHistory(source, target, sLang, tLang) {
+            if (appState.history.length > 0 && appState.history[0].source === source && appState.history[0].target === target) {
+                return;
             }
+            const item = { id: Date.now(), source, target, sLang, tLang, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+            appState.history.unshift(item);
+            if (appState.history.length > 25) appState.history.pop();
+            localStorage.setItem('polyglot_history', JSON.stringify(appState.history));
+            renderHistory();
         }
 
-        function showToast(msg) {
-            const container = document.getElementById('toast-container');
-            document.getElementById('toast-text').textContent = msg;
-            container.classList.remove('opacity-0', 'translate-y-[-10px]');
-            container.classList.add('opacity-100', 'translate-y-0');
-            setTimeout(() => {
-                container.classList.remove('opacity-100', 'translate-y-0');
-                container.classList.add('opacity-0', 'translate-y-[-10px]');
-            }, 2000);
+        function toggleFavorite() {
+            const source = document.getElementById('sourceText').value.trim();
+            const target = document.getElementById('targetText').textContent.trim();
+            if (!source || target === "La traduction apparaîtra ici...") return;
+
+            const index = appState.favorites.findIndex(f => f.source === source && f.target === target);
+            if (index > -1) {
+                appState.favorites.splice(index, 1);
+                showToast("Retiré des favoris");
+            } else {
+                appState.favorites.unshift({ id: Date.now(), source, target, sLang: appState.sourceLang, tLang: appState.targetLang });
+                showToast("Ajouté aux favoris !");
+            }
+            localStorage.setItem('polyglot_favorites', JSON.stringify(appState.favorites));
+            updateFavoriteButtonState();
+            renderFavorites();
         }
 
-        function filterPhrases(category) {
-            document.querySelectorAll('.phrase-filter-btn').forEach(btn => {
-                btn.className = "phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 hover:bg-slate-200";
-            });
-            event.target.className = "phrase-filter-btn px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-600 text-white shrink-0";
-            renderPhrases(category);
-        }
+        function updateFavoriteButtonState() {
+            const source = document.getElementById('sourceText').value.trim();
+            const target = document.getElementById('targetText').textContent.trim();
+            const favIcon = document.getElementById('favIcon');
+            const isFav = appState.favorites.some(f => f.source === source && f.target === target);
 
-        function renderPhrases(category) {
-            const container = document.getElementById('phrases-container');
-            container.innerHTML = '';
-            const tgtLang = document.getElementById('target-lang-select').value;
-            const filtered = category === 'all' ? quickPhrases : quickPhrases.filter(p => p.cat === category);
-
-            filtered.forEach(item => {
-                const translatedText = item.translations[tgtLang] || item.translations['en'];
-                const div = document.createElement('div');
-                div.className = "bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2";
-                div.innerHTML = `
-                    <div class="flex-1 cursor-pointer" onclick="loadPhrase('${item.fr.replace(/'/g, "\\'")}')">
-                        <p class="text-xs font-semibold text-slate-800">${item.fr}</p>
-                        <p class="text-[11px] text-indigo-600 font-medium">${translatedText}</p>
-                    </div>
-                    <button onclick="speakPhrase('${translatedText.replace(/'/g, "\\'")}', '${tgtLang}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-500 hover:text-indigo-600 flex items-center justify-center shrink-0 border border-slate-200 text-xs">
-                        <i class="fa-solid fa-volume-high"></i>
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function loadPhrase(frText) {
-            switchTab('translator');
-            document.getElementById('source-lang-select').value = 'fr';
-            document.getElementById('source-textarea').value = frText;
-            handleLanguageChange();
-        }
-
-        function speakPhrase(text, lang) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                const langMap = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', de: 'de-DE', it: 'it-IT', pt: 'pt-PT', ar: 'ar-SA' };
-                utterance.lang = langMap[lang] || 'en-US';
-                window.speechSynthesis.speak(utterance);
+            if (isFav) {
+                favIcon.setAttribute('fill', 'currentColor');
+                favIcon.classList.add('text-amber-400');
+            } else {
+                favIcon.setAttribute('fill', 'none');
+                favIcon.classList.remove('text-amber-400');
             }
         }
 
         function renderHistory() {
-            const container = document.getElementById('history-container');
+            const container = document.getElementById('historyItems');
+            const emptyEl = document.getElementById('historyEmpty');
             container.innerHTML = '';
-            if (historyList.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">Aucun historique récent</div>`;
+
+            if (appState.history.length === 0) {
+                emptyEl.style.display = 'block';
                 return;
             }
+            emptyEl.style.display = 'none';
 
-            historyList.forEach((item, index) => {
+            appState.history.forEach(item => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2";
+                div.className = "bg-slate-800 p-2.5 rounded-xl border border-slate-700/80 flex flex-col space-y-1 text-xs cursor-pointer hover:border-slate-600 transition";
+                div.onclick = () => {
+                    document.getElementById('sourceLang').value = item.sLang;
+                    document.getElementById('targetLang').value = item.tLang;
+                    handleLangChange();
+                    document.getElementById('sourceText').value = item.source;
+                    document.getElementById('targetText').textContent = item.target;
+                    switchTab('translate');
+                };
                 div.innerHTML = `
-                    <div class="flex-1 overflow-hidden cursor-pointer" onclick="restoreHistory(${index})">
-                        <div class="flex items-center gap-2 text-[10px] text-slate-400 mb-0.5">
-                            <span class="bg-slate-100 px-1 rounded font-mono">${item.langs}</span>
-                            <span>${item.date}</span>
-                        </div>
-                        <p class="text-xs font-medium text-slate-800 truncate">${item.src}</p>
-                        <p class="text-xs text-indigo-600 truncate">${item.tgt}</p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-400">
+                        <span class="font-semibold uppercase tracking-wider">${item.sLang} &rarr; ${item.tLang}</span>
+                        <span>${item.time}</span>
                     </div>
-                    <button onclick="deleteHistoryItem(${index})" class="text-slate-300 hover:text-rose-500 p-1 transition text-xs">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
+                    <div class="text-slate-200 font-medium truncate">${escapeHtml(item.source)}</div>
+                    <div class="text-indigo-400 font-medium truncate">${escapeHtml(item.target)}</div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function restoreHistory(index) {
-            const item = historyList[index];
-            const parts = item.langs.split(' → ');
-            switchTab('translator');
-            document.getElementById('source-lang-select').value = parts[0].toLowerCase();
-            document.getElementById('target-lang-select').value = parts[1].toLowerCase();
-            document.getElementById('source-textarea').value = item.src;
-            handleLanguageChange();
+        function renderFavorites() {
+            const container = document.getElementById('favoritesItems');
+            const emptyEl = document.getElementById('favoritesEmpty');
+            container.innerHTML = '';
+
+            if (appState.favorites.length === 0) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            appState.favorites.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-800 p-2.5 rounded-xl border border-slate-700/80 flex flex-col space-y-1 text-xs relative";
+                div.innerHTML = `
+                    <div class="flex items-center justify-between text-[10px] text-slate-400">
+                        <span class="font-semibold uppercase tracking-wider">${item.sLang} &rarr; ${item.tLang}</span>
+                        <button onclick="removeFavorite(event, ${item.id})" class="text-rose-400 hover:text-rose-300">Supprimer</button>
+                    </div>
+                    <div class="text-slate-200 font-medium">${escapeHtml(item.source)}</div>
+                    <div class="text-indigo-400 font-medium">${escapeHtml(item.target)}</div>
+                `;
+                container.appendChild(div);
+            });
         }
 
-        function deleteHistoryItem(index) {
-            historyList.splice(index, 1);
-            localStorage.setItem('multitrad_history', JSON.stringify(historyList));
-            renderHistory();
+        function removeFavorite(e, id) {
+            e.stopPropagation();
+            appState.favorites = appState.favorites.filter(f => f.id !== id);
+            localStorage.setItem('polyglot_favorites', JSON.stringify(appState.favorites));
+            renderFavorites();
+            updateFavoriteButtonState();
+            showToast("Favori retiré");
         }
 
         function clearHistory() {
-            historyList = [];
-            localStorage.removeItem('multitrad_history');
+            appState.history = [];
+            localStorage.removeItem('polyglot_history');
             renderHistory();
-            showToast("Historique effacé");
+            showToast("Historique vidé");
         }
 
-        function toggleFavorite() {
-            const btn = document.getElementById('fav-btn');
-            const isFav = btn.classList.toggle('text-amber-500');
-            showToast(isFav ? "Ajouté aux favoris" : "Retiré des favoris");
+        function clearFavorites() {
+            appState.favorites = [];
+            localStorage.removeItem('polyglot_favorites');
+            renderFavorites();
+            updateFavoriteButtonState();
+            showToast("Favoris vidés");
+        }
+
+        function switchTab(tab) {
+            const isTranslate = tab === 'translate';
+            document.getElementById('viewTranslate').style.display = isTranslate ? 'flex' : 'none';
+            document.getElementById('viewHistory').style.display = isTranslate ? 'none' : 'flex';
+
+            document.getElementById('tabTranslate').className = isTranslate ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all bg-indigo-600 text-white shadow-sm" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200";
+            document.getElementById('tabHistory').className = !isTranslate ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all bg-indigo-600 text-white shadow-sm" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200";
+        }
+
+        function switchSubTab(subTab) {
+            const isHistory = subTab === 'historyList';
+            document.getElementById('historyListContainer').style.display = isHistory ? 'flex' : 'none';
+            document.getElementById('favoritesListContainer').style.display = isHistory ? 'none' : 'flex';
+
+            document.getElementById('subTabHistory').className = isHistory ? "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-white transition" : "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+            document.getElementById('subTabFavorites').className = !isHistory ? "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-white transition" : "flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition";
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2200);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
 </body>
